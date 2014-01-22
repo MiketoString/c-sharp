@@ -166,22 +166,22 @@ namespace PubNubMessaging.Core
             int logLevelValue;
             if (!Int32.TryParse(configuredLogLevel, out logLevelValue))
             {
-                LoggingMethod.LogLevel = pubnubLogLevel;
+                base.PubnubLogLevel = pubnubLogLevel;
             }
             else
             {
-                LoggingMethod.LogLevel = (LoggingMethod.Level)logLevelValue;
+                base.PubnubLogLevel = (LoggingMethod.Level)logLevelValue;
             }
 
             string configuredErrorFilter = ConfigurationManager.AppSettings["PubnubMessaging.PubnubErrorFilterLevel"];
             int errorFilterValue;
             if (!Int32.TryParse(configuredErrorFilter, out errorFilterValue))
             {
-                PubnubErrorFilter.ErrorLevel = errorLevel;
+                base.PubnubErrorLevel = errorLevel;
             }
             else
             {
-                PubnubErrorFilter.ErrorLevel = (PubnubErrorFilter.Level)errorFilterValue;
+                base.PubnubErrorLevel = (PubnubErrorFilter.Level)errorFilterValue;
             }
 #endif
 
@@ -254,10 +254,8 @@ namespace PubNubMessaging.Core
         protected override bool HandleWebException<T>(WebException webEx, RequestState<T> asynchRequestState, string channel)
         {
             bool reconnect = false;
-            if ((webEx.Status == WebExceptionStatus.NameResolutionFailure //No network
-            || webEx.Status == WebExceptionStatus.ConnectFailure //Sending Keep-alive packet failed (No network)/Server is down.
-            || webEx.Status == WebExceptionStatus.ServerProtocolViolation //Problem with proxy or ISP
-            || webEx.Status == WebExceptionStatus.ProtocolError) && (!overrideTcpKeepAlive))
+            if (webEx.Status == WebExceptionStatus.ConnectFailure //Sending Keep-alive packet failed (No network)/Server is down.
+             && !overrideTcpKeepAlive)
             {
                 //internet connection problem.
                 LoggingMethod.WriteToLog(string.Format("DateTime {0}, _urlRequest - Internet connection problem", DateTime.Now.ToString()), LoggingMethod.LevelError);

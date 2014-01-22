@@ -166,22 +166,22 @@ namespace PubNubMessaging.Core
             int logLevelValue;
             if (!Int32.TryParse(configuredLogLevel, out logLevelValue))
             {
-                LoggingMethod.LogLevel = pubnubLogLevel;
+                base.PubnubLogLevel = pubnubLogLevel;
             }
             else
             {
-                LoggingMethod.LogLevel = (LoggingMethod.Level)logLevelValue;
+                base.PubnubLogLevel = (LoggingMethod.Level)logLevelValue;
             }
 
             string configuredErrorFilter = ConfigurationManager.AppSettings["PubnubMessaging.PubnubErrorFilterLevel"];
             int errorFilterValue;
             if (!Int32.TryParse(configuredErrorFilter, out errorFilterValue))
             {
-                PubnubErrorFilter.ErrorLevel = errorLevel;
+                base.PubnubErrorLevel = errorLevel;
             }
             else
             {
-                PubnubErrorFilter.ErrorLevel = (PubnubErrorFilter.Level)errorFilterValue;
+                base.PubnubErrorLevel = (PubnubErrorFilter.Level)errorFilterValue;
             }
 #endif
 

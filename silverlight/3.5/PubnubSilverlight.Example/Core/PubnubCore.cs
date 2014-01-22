@@ -92,8 +92,8 @@ namespace PubNubMessaging.Core
 		bool _enableResumeOnReconnect = true;
 		protected bool overrideTcpKeepAlive = true;
 		bool _enableJsonEncodingForPublish = true;
-		const LoggingMethod.Level _pubnubLogLevel = LoggingMethod.Level.Off;
-		const PubnubErrorFilter.Level _errorLevel = PubnubErrorFilter.Level.Info;
+		LoggingMethod.Level _pubnubLogLevel = LoggingMethod.Level.Off;
+		PubnubErrorFilter.Level _errorLevel = PubnubErrorFilter.Level.Info;
 
 		ConcurrentDictionary<string, long> _multiChannelSubscribe = new ConcurrentDictionary<string, long>();
 		ConcurrentDictionary<string, PubnubWebRequest> _channelRequest = new ConcurrentDictionary<string, PubnubWebRequest>();
@@ -290,7 +290,30 @@ namespace PubNubMessaging.Core
 				sessionUUID = value;
 			}
 		}
-		#endregion
+
+        protected LoggingMethod.Level PubnubLogLevel
+        {
+            get
+            {
+                return _pubnubLogLevel;
+            }
+            set
+            {
+                _pubnubLogLevel = value;
+            }
+        }
+        protected PubnubErrorFilter.Level PubnubErrorLevel
+        {
+            get
+            {
+                return _errorLevel;
+            }
+            set
+            {
+                _errorLevel = value;
+            }
+        }
+        #endregion
 
 		#region "Init"
 		/**
