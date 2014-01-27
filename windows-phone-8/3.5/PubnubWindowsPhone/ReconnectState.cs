@@ -2,7 +2,6 @@ using System;
 
 namespace PubNubMessaging.Core
 {
-	#if(!UNITY_IOS && !UNITY_ANDROID)
 	public class ReconnectState<T>
 	{
 		public string[] Channels;
@@ -20,6 +19,5 @@ namespace PubNubMessaging.Core
 			Timetoken = null;
 		}
 	}
-	#endif
 }
 
