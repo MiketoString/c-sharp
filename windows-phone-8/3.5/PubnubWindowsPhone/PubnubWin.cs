@@ -1,3 +1,4 @@
+//Build Date: January 27, 2014
 using System;
 using System.Text;
 //using System.Net.Security;
@@ -23,7 +24,7 @@ namespace PubNubMessaging.Core
 	{
 
 		#region "Constants"
-		const LoggingMethod.Level pubnubLogLevel = LoggingMethod.Level.Verbose;
+		const LoggingMethod.Level pubnubLogLevel = LoggingMethod.Level.Off;
 		const PubnubErrorFilter.Level errorLevel = PubnubErrorFilter.Level.Info;
 
 		#if (!SILVERLIGHT && !WINDOWS_PHONE)
@@ -206,7 +207,7 @@ namespace PubNubMessaging.Core
 		protected override bool InternetConnectionStatus<T> (string channel, Action<PubnubClientError> errorCallback, string[] rawChannels)
 		{
             bool networkConnection;
-            networkConnection = ClientNetworkStatus.CheckInternetStatus<T>(_pubnetSystemActive, errorCallback, rawChannels);
+            networkConnection = ClientNetworkStatus.CheckInternetStatus<T>(pubnetSystemActive, errorCallback, rawChannels);
             return networkConnection;
         }
 
@@ -248,7 +249,7 @@ namespace PubNubMessaging.Core
 			}
 			heartBeatTimer = new Timer(new TimerCallback(OnPubnubHeartBeatTimeoutCallback<T>), pubnubRequestState, 0,
                                        base.HeartbeatInterval * 1000);
-			_channelHeartbeatTimer.AddOrUpdate(requestUri, heartBeatTimer, (key, oldState) => heartBeatTimer);
+			channelHeartbeatTimer.AddOrUpdate(requestUri, heartBeatTimer, (key, oldState) => heartBeatTimer);
 		}
 
         protected override bool HandleWebException<T>(WebException webEx, RequestState<T> asynchRequestState, string channel)
@@ -261,23 +262,23 @@ namespace PubNubMessaging.Core
             {
                 //internet connection problem.
                 LoggingMethod.WriteToLog(string.Format("DateTime {0}, _urlRequest - Internet connection problem", DateTime.Now.ToString()), LoggingMethod.LevelError);
-                if (_channelInternetStatus.ContainsKey(channel) && (asynchRequestState.Type == ResponseType.Subscribe || asynchRequestState.Type == ResponseType.Presence))
+                if (channelInternetStatus.ContainsKey(channel) && (asynchRequestState.Type == ResponseType.Subscribe || asynchRequestState.Type == ResponseType.Presence))
                 {
                     reconnect = true;
-                    if (_channelInternetStatus[channel])
+                    if (channelInternetStatus[channel])
                     {
                         //Reset Retry if previous state is true
-                        _channelInternetRetry.AddOrUpdate(channel, 0, (key, oldValue) => 0);
+                        channelInternetRetry.AddOrUpdate(channel, 0, (key, oldValue) => 0);
                     }
                     else
                     {
-                        _channelInternetRetry.AddOrUpdate(channel, 1, (key, oldValue) => oldValue + 1);
+                        channelInternetRetry.AddOrUpdate(channel, 1, (key, oldValue) => oldValue + 1);
                         string multiChannel = (asynchRequestState.Channels != null) ? string.Join(",", asynchRequestState.Channels) : "";
-                        LoggingMethod.WriteToLog(string.Format("DateTime {0} {1} channel = {2} _urlRequest - Internet connection retry {3} of {4}", DateTime.Now.ToString(), asynchRequestState.Type, multiChannel, _channelInternetRetry[channel], base.NetworkCheckMaxRetries), LoggingMethod.LevelInfo);
-                        string message = string.Format("Detected internet connection problem. Retrying connection attempt {0} of {1}", _channelInternetRetry[channel], base.NetworkCheckMaxRetries);
+                        LoggingMethod.WriteToLog(string.Format("DateTime {0} {1} channel = {2} _urlRequest - Internet connection retry {3} of {4}", DateTime.Now.ToString(), asynchRequestState.Type, multiChannel, channelInternetRetry[channel], base.NetworkCheckMaxRetries), LoggingMethod.LevelInfo);
+                        string message = string.Format("Detected internet connection problem. Retrying connection attempt {0} of {1}", channelInternetRetry[channel], base.NetworkCheckMaxRetries);
                         CallErrorCallback(PubnubErrorSeverity.Warn, PubnubMessageSource.Client, multiChannel, asynchRequestState.ErrorCallback, message, PubnubErrorCode.NoInternetRetryConnect, null, null);
                     }
-                    _channelInternetStatus[channel] = false;
+                    channelInternetStatus[channel] = false;
                 }
                 Thread.Sleep(base.NetworkCheckRetryInterval * 1000);
             }
@@ -322,7 +323,7 @@ namespace PubNubMessaging.Core
 		{
 			if (e.Mode == PowerModes.Suspend)
 			{
-				_pubnetSystemActive = false;
+				pubnetSystemActive = false;
 				ClientNetworkStatus.MachineSuspendMode = true;
 				PubnubWebRequest.MachineSuspendMode = true;
 				TerminatePendingWebRequest();
@@ -340,7 +341,7 @@ namespace PubNubMessaging.Core
 			}
 			else if (e.Mode == PowerModes.Resume)
 			{
-				_pubnetSystemActive = true;
+				pubnetSystemActive = true;
 				ClientNetworkStatus.MachineSuspendMode = false;
 				PubnubWebRequest.MachineSuspendMode = false;
                 if (overrideTcpKeepAlive && heartBeatTimer != null)

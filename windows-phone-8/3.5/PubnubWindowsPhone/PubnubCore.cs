@@ -1,4 +1,4 @@
-//Build Date: December 23, 2013
+//Build Date: January 27, 2014
 #region "Header"
 #if (UNITY_STANDALONE || UNITY_WEBPLAYER || UNITY_ANDROID)
 #define USE_JSONFX
@@ -7,10 +7,6 @@
 #endif
 #if (__MonoCS__ && !UNITY_STANDALONE && !UNITY_WEBPLAYER)
 #define TRACE
-#endif
-#if (UNITY_STANDALONE || UNITY_WEBPLAYER || UNITY_IOS || UNITY_ANDROID)
-using UnityEngine;
-using System.Security.Cryptography.X509Certificates;
 #endif
 using System;
 using System.IO;
@@ -25,31 +21,10 @@ using System.Threading;
 using System.Diagnostics;
 using System.Collections.Concurrent;
 using System.Globalization;
-#if !UNITY_WEBPLAYER
 using System.Net.NetworkInformation;
-#endif
-#if (!UNITY_IOS && !UNITY_ANDROID)
 using System.Net.Sockets;
-#endif
 using System.Linq;
 using System.Text.RegularExpressions;
-#if (SILVERLIGHT || WINDOWS_PHONE)
-using System.Windows.Threading;
-using System.IO.IsolatedStorage;
-using System.Net.Browser;
-#endif
-#if (__MonoCS__)
-using System.Net.Security;
-#endif
-
-#if(MONODROID || __ANDROID__)
-using Android.Runtime;
-using Javax.Net.Ssl;
-#endif
-#if(MONODROID || __ANDROID__)
-using System.Security.Cryptography.X509Certificates;
-#endif
-
 #if (USE_JSONFX)
 using JsonFx.Json;
 #elif (USE_DOTNET_SERIALIZATION)
@@ -97,15 +72,15 @@ namespace PubNubMessaging.Core
 
 		ConcurrentDictionary<string, long> _multiChannelSubscribe = new ConcurrentDictionary<string, long>();
 		ConcurrentDictionary<string, PubnubWebRequest> _channelRequest = new ConcurrentDictionary<string, PubnubWebRequest>();
-		protected ConcurrentDictionary<string, bool> _channelInternetStatus = new ConcurrentDictionary<string, bool>();
-		protected ConcurrentDictionary<string, int> _channelInternetRetry = new ConcurrentDictionary<string, int>();
+		protected ConcurrentDictionary<string, bool> channelInternetStatus = new ConcurrentDictionary<string, bool>();
+		protected ConcurrentDictionary<string, int> channelInternetRetry = new ConcurrentDictionary<string, int>();
 		ConcurrentDictionary<string, Timer> _channelReconnectTimer = new ConcurrentDictionary<string, Timer>();
-		protected ConcurrentDictionary<Uri, Timer> _channelHeartbeatTimer = new ConcurrentDictionary<Uri, Timer>();
+		protected ConcurrentDictionary<Uri, Timer> channelHeartbeatTimer = new ConcurrentDictionary<Uri, Timer>();
 		ConcurrentDictionary<PubnubChannelCallbackKey, object> _channelCallbacks = new ConcurrentDictionary<PubnubChannelCallbackKey, object>();
 
 		protected System.Threading.Timer heartBeatTimer;
 
-		protected static bool _pubnetSystemActive = true;
+		protected static bool pubnetSystemActive = true;
 
 		// History of Messages (Obsolete)
 		private List<object> _history = new List<object>();
@@ -380,18 +355,18 @@ namespace PubNubMessaging.Core
 				{
 					channel = string.Join(",", netState.Channels);
 
-					if (_channelInternetStatus.ContainsKey(channel)
+					if (channelInternetStatus.ContainsKey(channel)
 					    && (netState.Type == ResponseType.Subscribe || netState.Type == ResponseType.Presence))
 					{
-						if (_channelInternetStatus[channel])
+						if (channelInternetStatus[channel])
 						{
 							//Reset Retry if previous state is true
-							_channelInternetRetry.AddOrUpdate(channel, 0, (key, oldValue) => 0);
+							channelInternetRetry.AddOrUpdate(channel, 0, (key, oldValue) => 0);
 						}
 						else
 						{
-							_channelInternetRetry.AddOrUpdate(channel, 1, (key, oldValue) => oldValue + 1);
-							LoggingMethod.WriteToLog(string.Format("DateTime {0}, {1} {2} reconnectNetworkCallback. Retry {3} of {4}", DateTime.Now.ToString(), channel, netState.Type, _channelInternetRetry[channel], _pubnubNetworkCheckRetries), LoggingMethod.LevelInfo);
+							channelInternetRetry.AddOrUpdate(channel, 1, (key, oldValue) => oldValue + 1);
+							LoggingMethod.WriteToLog(string.Format("DateTime {0}, {1} {2} reconnectNetworkCallback. Retry {3} of {4}", DateTime.Now.ToString(), channel, netState.Type, channelInternetRetry[channel], _pubnubNetworkCheckRetries), LoggingMethod.LevelInfo);
 
 							if (netState.Channels != null)
 							{
@@ -399,7 +374,7 @@ namespace PubNubMessaging.Core
 								{
 									string activeChannel = netState.Channels[index].ToString();
 
-									string message = string.Format("Detected internet connection problem. Retrying connection attempt {0} of {1}", _channelInternetRetry[channel], _pubnubNetworkCheckRetries);
+									string message = string.Format("Detected internet connection problem. Retrying connection attempt {0} of {1}", channelInternetRetry[channel], _pubnubNetworkCheckRetries);
 
 									PubnubChannelCallbackKey callbackKey = new PubnubChannelCallbackKey();
 									callbackKey.Channel = activeChannel;
@@ -420,7 +395,7 @@ namespace PubNubMessaging.Core
 						}
 					}
 
-					if (_channelInternetStatus[channel])
+					if (channelInternetStatus[channel])
 					{
 						if (_channelReconnectTimer.ContainsKey(channel))
 						{
@@ -433,7 +408,7 @@ namespace PubNubMessaging.Core
 						CallErrorCallback (PubnubErrorSeverity.Warn, PubnubMessageSource.Client,
 						                   multiChannel, netState.ErrorCallback, message, PubnubErrorCode.YesInternet, null, null);
 
-						LoggingMethod.WriteToLog(string.Format("DateTime {0}, {1} {2} reconnectNetworkCallback. Internet Available : {3}", DateTime.Now.ToString(), channel, netState.Type, _channelInternetStatus[channel]), LoggingMethod.LevelInfo);
+						LoggingMethod.WriteToLog(string.Format("DateTime {0}, {1} {2} reconnectNetworkCallback. Internet Available : {3}", DateTime.Now.ToString(), channel, netState.Type, channelInternetStatus[channel]), LoggingMethod.LevelInfo);
 						switch (netState.Type)
 						{
 							case ResponseType.Subscribe:
@@ -444,7 +419,7 @@ namespace PubNubMessaging.Core
 							break;
 						}
 					}
-					else if (_channelInternetRetry[channel] >= _pubnubNetworkCheckRetries)
+					else if (channelInternetRetry[channel] >= _pubnubNetworkCheckRetries)
 					{
 						if (_channelReconnectTimer.ContainsKey(channel))
 						{
@@ -507,7 +482,7 @@ namespace PubNubMessaging.Core
 		protected virtual bool InternetConnectionStatus<T> (string channel, Action<PubnubClientError> errorCallback, string[] rawChannels)
 		{
 			bool networkConnection;
-			networkConnection = ClientNetworkStatus.CheckInternetStatus<T>(_pubnetSystemActive, errorCallback, rawChannels);
+			networkConnection = ClientNetworkStatus.CheckInternetStatus<T>(pubnetSystemActive, errorCallback, rawChannels);
 			return networkConnection;
 		}
 
@@ -516,22 +491,22 @@ namespace PubNubMessaging.Core
 			if (channels == null) return;
 
 			string multiChannel = string.Join(",", channels);
-			if (_channelInternetStatus.ContainsKey(multiChannel))
+			if (channelInternetStatus.ContainsKey(multiChannel))
 			{
-				_channelInternetStatus.AddOrUpdate(multiChannel, true, (key, oldValue) => true);
+				channelInternetStatus.AddOrUpdate(multiChannel, true, (key, oldValue) => true);
 			}
 			else
 			{
-				_channelInternetStatus.GetOrAdd(multiChannel, true); //Set to true for internet connection
+				channelInternetStatus.GetOrAdd(multiChannel, true); //Set to true for internet connection
 			}
 
-			if (_channelInternetRetry.ContainsKey(multiChannel))
+			if (channelInternetRetry.ContainsKey(multiChannel))
 			{
-				_channelInternetRetry.AddOrUpdate(multiChannel, 0, (key, oldValue) => 0);
+				channelInternetRetry.AddOrUpdate(multiChannel, 0, (key, oldValue) => 0);
 			}
 			else
 			{
-				_channelInternetRetry.GetOrAdd(multiChannel, 0); //Initialize the internet retry count
+				channelInternetRetry.GetOrAdd(multiChannel, 0); //Initialize the internet retry count
 			}
 		}
 
@@ -749,9 +724,9 @@ namespace PubNubMessaging.Core
 		{
 			if (requestUri != null)
 			{
-				if (_channelHeartbeatTimer.ContainsKey(requestUri))
+				if (channelHeartbeatTimer.ContainsKey(requestUri))
 				{
-					Timer requestHeatbeatTimer = _channelHeartbeatTimer[requestUri];
+					Timer requestHeatbeatTimer = channelHeartbeatTimer[requestUri];
 					if (requestHeatbeatTimer != null)
 					{
 						try
@@ -767,7 +742,7 @@ namespace PubNubMessaging.Core
 						}
 
 						Timer removedTimer = null;
-						bool removed = _channelHeartbeatTimer.TryRemove(requestUri, out removedTimer);
+						bool removed = channelHeartbeatTimer.TryRemove(requestUri, out removedTimer);
 						if (removed)
 						{
 							LoggingMethod.WriteToLog(string.Format("DateTime {0} Remove heartbeat reference from collection for {1}", DateTime.Now.ToString(), requestUri.ToString()), LoggingMethod.LevelInfo);
@@ -781,16 +756,16 @@ namespace PubNubMessaging.Core
 			}
 			else
 			{
-				ConcurrentDictionary<Uri, Timer> timerCollection = _channelHeartbeatTimer;
+				ConcurrentDictionary<Uri, Timer> timerCollection = channelHeartbeatTimer;
 				ICollection<Uri> keyCollection = timerCollection.Keys;
 				foreach (Uri key in keyCollection)
 				{
-					if (_channelHeartbeatTimer.ContainsKey(key))
+					if (channelHeartbeatTimer.ContainsKey(key))
 					{
-						Timer currentTimer = _channelHeartbeatTimer[key];
+						Timer currentTimer = channelHeartbeatTimer[key];
 						currentTimer.Dispose();
 						Timer removedTimer = null;
-						bool removed = _channelHeartbeatTimer.TryRemove(key, out removedTimer);
+						bool removed = channelHeartbeatTimer.TryRemove(key, out removedTimer);
 						if (!removed)
 						{
 							LoggingMethod.WriteToLog(string.Format("DateTime {0} TerminateHeartbeatTimer(null) - Unable to remove heartbeat reference from collection for {1}", DateTime.Now.ToString(), key.ToString()), LoggingMethod.LevelInfo);
@@ -1524,9 +1499,9 @@ namespace PubNubMessaging.Core
 				return;
 			}
 
-			if (_channelInternetStatus.ContainsKey(multiChannel) && (!_channelInternetStatus[multiChannel]) && _pubnetSystemActive)
+			if (channelInternetStatus.ContainsKey(multiChannel) && (!channelInternetStatus[multiChannel]) && pubnetSystemActive)
 			{
-				if (_channelInternetRetry.ContainsKey(multiChannel) && (_channelInternetRetry[multiChannel] >= _pubnubNetworkCheckRetries))
+				if (channelInternetRetry.ContainsKey(multiChannel) && (channelInternetRetry[multiChannel] >= _pubnubNetworkCheckRetries))
 				{
 					LoggingMethod.WriteToLog(string.Format("DateTime {0}, Subscribe channel={1} - No internet connection. MAXed retries for internet ", DateTime.Now.ToString(), multiChannel), LoggingMethod.LevelInfo);
 					MultiplexExceptionHandler<T>(type,channels, userCallback, connectCallback, errorCallback, true, false);
@@ -2150,7 +2125,7 @@ namespace PubNubMessaging.Core
 
 		protected virtual bool CheckInternetConnectionStatus<T>(bool systemActive, Action<PubnubClientError> errorCallback, string[] channels)
 		{
-			return ClientNetworkStatus.CheckInternetStatus<T>(_pubnetSystemActive, errorCallback, channels);
+			return ClientNetworkStatus.CheckInternetStatus<T>(pubnetSystemActive, errorCallback, channels);
 		}
 
 		protected void OnPubnubHeartBeatTimeoutCallback<T>(System.Object heartbeatState)
@@ -2160,7 +2135,7 @@ namespace PubNubMessaging.Core
 			{
 				string channel = (currentState.Channels != null) ? string.Join(",", currentState.Channels) : "";
 
-				if (_channelInternetStatus.ContainsKey(channel)
+				if (channelInternetStatus.ContainsKey(channel)
 				    && (currentState.Type == ResponseType.Subscribe || currentState.Type == ResponseType.Presence)
 				    && overrideTcpKeepAlive)
 				{
@@ -2171,10 +2146,10 @@ namespace PubNubMessaging.Core
 					}
 					else
 					{
-						networkConnection = CheckInternetConnectionStatus <T> (_pubnetSystemActive, currentState.ErrorCallback, currentState.Channels);
+						networkConnection = CheckInternetConnectionStatus <T> (pubnetSystemActive, currentState.ErrorCallback, currentState.Channels);
 					}
 
-					_channelInternetStatus[channel] = networkConnection;
+					channelInternetStatus[channel] = networkConnection;
 
 					LoggingMethod.WriteToLog(string.Format("DateTime: {0}, OnPubnubHeartBeatTimeoutCallback - Internet connection = {1}", DateTime.Now.ToString(), networkConnection), LoggingMethod.LevelVerbose);
 					if (!networkConnection)
@@ -2344,7 +2319,7 @@ namespace PubNubMessaging.Core
 						{
 							if (asynchRequestState.Type == ResponseType.Subscribe || asynchRequestState.Type == ResponseType.Presence)
 							{
-								if (!overrideTcpKeepAlive && _channelInternetStatus.ContainsKey(channel) && !_channelInternetStatus[channel])
+								if (!overrideTcpKeepAlive && channelInternetStatus.ContainsKey(channel) && !channelInternetStatus[channel])
 								{
 									if (asynchRequestState.Channels != null)
 									{
@@ -2379,7 +2354,7 @@ namespace PubNubMessaging.Core
 									}
 								}
 
-								_channelInternetStatus.AddOrUpdate(channel, true, (key, oldValue) => true);
+								channelInternetStatus.AddOrUpdate(channel, true, (key, oldValue) => true);
 							}
 
 							//Deserialize the result
@@ -2561,7 +2536,7 @@ namespace PubNubMessaging.Core
 			}
 			catch (Exception ex)
 			{
-				if (!_pubnetSystemActive && ex.Message.IndexOf("The IAsyncResult object was not returned from the corresponding asynchronous method on this class.") == -1)
+				if (!pubnetSystemActive && ex.Message.IndexOf("The IAsyncResult object was not returned from the corresponding asynchronous method on this class.") == -1)
 				{
 					if (asynchRequestState.Channels != null)
 					{
@@ -2837,13 +2812,13 @@ namespace PubNubMessaging.Core
 		public void EnableMachineSleepModeForTestingOnly()
 		{
 			GeneratePowerSuspendEvent ();
-			_pubnetSystemActive = false;
+			pubnetSystemActive = false;
 		}
 
 		public void DisableMachineSleepModeForTestingOnly()
 		{
 			GeneratePowerResumeEvent ();
-			_pubnetSystemActive = true;
+			pubnetSystemActive = true;
 		}
 		#endregion
 
@@ -3386,7 +3361,7 @@ namespace PubNubMessaging.Core
 			heartBeatTimer = new System.Threading.Timer(
 				new TimerCallback(OnPubnubHeartBeatTimeoutCallback<T>), pubnubRequestState, 0,
 				(-1 == _pubnubNetworkTcpCheckIntervalInSeconds) ? Timeout.Infinite : _pubnubNetworkTcpCheckIntervalInSeconds * 1000);
-			_channelHeartbeatTimer.AddOrUpdate(requestUri, heartBeatTimer, (key, oldState) => heartBeatTimer);
+			channelHeartbeatTimer.AddOrUpdate(requestUri, heartBeatTimer, (key, oldState) => heartBeatTimer);
 		}
 
 		protected abstract PubnubWebRequest SetServicePointSetTcpKeepAlive (PubnubWebRequest request);
