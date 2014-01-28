@@ -1,4 +1,4 @@
-//Build Date: January 27, 2014
+//Build Date: January 28, 2014
 #region "Header"
 #if (UNITY_STANDALONE || UNITY_WEBPLAYER || UNITY_ANDROID)
 #define USE_JSONFX
@@ -21,8 +21,6 @@ using System.Threading;
 using System.Diagnostics;
 using System.Collections.Concurrent;
 using System.Globalization;
-using System.Net.NetworkInformation;
-using System.Net.Sockets;
 using System.Linq;
 using System.Text.RegularExpressions;
 #if (USE_JSONFX)
@@ -1242,7 +1240,7 @@ namespace PubNubMessaging.Core
 			return hexaHash;
 		}
 
-		private string EncodeUricomponent(string s, ResponseType type, bool ignoreComma)
+		protected virtual string EncodeUricomponent(string s, ResponseType type, bool ignoreComma)
 		{
 			string encodedUri = "";
 			StringBuilder o = new StringBuilder();
@@ -1260,6 +1258,10 @@ namespace PubNubMessaging.Core
 					{
 						o.Append(ch.ToString());
 					}
+                    else if (Char.IsSurrogate(ch))
+                    {
+                        o.Append(ch);
+                    }
 					else
 					{
 						string escapeChar = System.Uri.EscapeDataString(ch.ToString());
