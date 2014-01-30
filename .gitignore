@@ -7,7 +7,7 @@
 /csharp.net/silverlight-part/*/obj/*
 /windows-phone-*/packages/*
 /windows-phone-*/packages.config
-#/windows-phone-*/*/bin/*
+/windows-phone-*/*/bin/*
 /windows-phone-*/*/obj/*
 /windows-phone-*/*.suo
 /windows-phone-*/*/*.user
