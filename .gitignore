@@ -11,7 +11,7 @@
 /windows-phone-*/*/*/obj/*
 /windows-phone-*/*/*.suo
 /windows-phone-*/*/*/*.user
-# /iis/PubNubExampleASPNET*/bin/*
+/iis/PubNubExampleASPNET*/bin/*
 /iis/PubNubExampleASPNET*/obj/*
 /iis/PubNubExampleASPNET*/obj/debug/*
 /iis/PubNubExampleASPNET*/*.suo
@@ -32,9 +32,9 @@
 /unity/*/*/UnityUnitTest/*.exe
 /unity/*/*/UnityUnitTest/*.userprefs
 /unity/*/*/UnityUnitTest/UnityUnitTestBuild_Data/*
-/silverlight/*/*.suo
-/silverlight/*/*/Bin/Debug/*
-/silverlight/*/*/Bin/Release/*
-/silverlight/*/*/obj/Debug/*
-/silverlight/*/*/obj/Release/*
+/silverlight/*.suo
+/silverlight/*/Bin/Debug/*
+/silverlight/*/Bin/Release/*
+/silverlight/*/obj/Debug/*
+/silverlight/*/obj/Release/*
 .DS_Store
