@@ -1,8 +1,8 @@
 .settings
 *~
-/csharp.net/*/PubNub-Messaging*/bin/*
-/csharp.net/*/PubNub-Messaging*/obj/*
-/csharp.net/*/*.suo
+/csharp.net/PubNub-Messaging*/bin/*
+/csharp.net/PubNub-Messaging*/obj/*
+/csharp.net/*.suo
 /csharp.net/silverlight-part/*/Debug/*
 /csharp.net/silverlight-part/*/obj/*
 /windows-phone-*/*/packages/*
